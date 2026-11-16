@@ -1,0 +1,23 @@
+---
+- name: Pipeline de deploiement automatise du projet final
+  hosts: local
+  gather_facts: no
+
+  tasks:
+    - name: "1. Build de l'image Docker de Maurel"
+      community.docker.docker_image:
+        name: maurel-app
+        tag: 1.0.0
+        build:
+          path: .
+        source: build
+
+    - name: "2. Injection de l'image locale dans le cluster Minikube"
+      ansible.builtin.command: minikube image load maurel-app:1.0.0
+      changed_when: true
+
+    - name: "3. Deploiement de l'infrastructure sur Kubernetes"
+      kubernetes.core.k8s:
+        state: present
+        src: ./k8s-manifest.yaml
+

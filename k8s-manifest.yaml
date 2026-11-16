@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: maurel-app-deployment
+  labels:
+    app: maurel-web
+spec:
+  replicas: 2 # Haute disponibilite : 2 instances en parallele
+  selector:
+    matchLabels:
+      app: maurel-web
+  template:
+    metadata:
+      labels:
+        app: maurel-web
+    spec:
+      containers:
+      - name: web-container
+        image: maurel-app:1.0.0
+        imagePullPolicy: Never # Force K8s a utiliser l'image locale sans la chercher sur internet
+        ports:
+        - containerPort: 80
+        resources:
+          requests:
+            memory: "32Mi"
+            cpu: "50m"
+          limits:
+            memory: "64Mi"
+            cpu: "100m" # Plafond de securite pour proteger le neud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: maurel-app-service
+spec:
+  selector:
+    app: maurel-web
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+      nodePort: 32000 # Port fixe pour ton navigateur
+  type: NodePort
+
